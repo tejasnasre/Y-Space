@@ -1,0 +1,15 @@
+node_modules
+.git
+.env
+.env.*
+!.env.example
+data
+dist
+coverage
+tests
+.agents
+.cursor
+*.log
+.DS_Store
+Dockerfile
+docker-compose.yml

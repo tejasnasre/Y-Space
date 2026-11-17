@@ -1,0 +1,50 @@
+services:
+  db:
+    # Postgres 17 + pg_cron (a clock) + pgmq (a message queue), on the same Alpine base as postgres:17-alpine (see db/Dockerfile).
+    # Without them the API falls back to its own timer and an in-memory raise-hand queue.
+    build: ./db
+    image: yspace-postgres:17
+    restart: unless-stopped
+    command: ["postgres", "-c", "shared_preload_libraries=pg_cron", "-c", "cron.database_name=yspace"]
+    environment:
+      POSTGRES_USER: yspace
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: yspace
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    # loopback only: for local dev, tests and psql. Never exposed to the network.
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yspace -d yspace"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://yspace:${POSTGRES_PASSWORD}@db:5432/yspace
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:5173}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+      MAX_SPEAKERS: ${MAX_SPEAKERS:-5}
+      MAX_PARTICIPANTS: ${MAX_PARTICIPANTS:-100}
+      ADMIN_SESSION_TTL_HOURS: ${ADMIN_SESSION_TTL_HOURS:-72}
+      RECONNECT_GRACE_SECONDS: ${RECONNECT_GRACE_SECONDS:-15}
+      RTC_LISTEN_IP: 0.0.0.0
+      RTC_ANNOUNCED_IP: ${RTC_ANNOUNCED_IP:?set RTC_ANNOUNCED_IP in .env (your public IP, or LAN IP for local testing)}
+      RTC_PORT: ${RTC_PORT:-44444}
+    ports:
+      - "${API_PORT:-3000}:3000"
+      # WebRTC media: same port number inside and out, because it is announced to browsers
+      - "${RTC_PORT:-44444}:${RTC_PORT:-44444}/udp"
+      - "${RTC_PORT:-44444}:${RTC_PORT:-44444}/tcp"
+
+volumes:
+  pgdata:

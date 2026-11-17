@@ -1,0 +1,1 @@
+ALTER TABLE "spaces" ADD COLUMN "public_list" boolean DEFAULT false NOT NULL;

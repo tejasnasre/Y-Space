@@ -1,0 +1,42 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# build output
+.next
+out
+dist
+build
+*.tgz
+
+# env files (never commit secrets)
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# db dumps / backups (may contain real data)
+db-backups
+
+# logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IDE / OS
+.idea
+.vscode
+.DS_Store
+
+# coverage
+coverage
+*.lcov

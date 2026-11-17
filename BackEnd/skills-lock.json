@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "skills": {
+    "bun-runtime": {
+      "source": "affaan-m/ECC",
+      "sourceType": "github",
+      "skillPath": "skills/bun-runtime/SKILL.md",
+      "computedHash": "920e3f890c6a03d90cc0133d0a15ea8965f992ad48819e483b31a36b69377f2f"
+    },
+    "elysiajs": {
+      "source": "elysiajs/skills",
+      "sourceType": "github",
+      "skillPath": "elysia/SKILL.md",
+      "computedHash": "a6c0405d2b902e2fe6227d612812d376f5ebb568ea55ec28634f92abf16485c4"
+    }
+  }
+}

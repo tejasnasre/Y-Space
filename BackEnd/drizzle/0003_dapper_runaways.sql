@@ -1,0 +1,1 @@
+ALTER TABLE "spaces" ADD COLUMN "auto_start" boolean DEFAULT false NOT NULL;
