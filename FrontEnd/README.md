@@ -24,6 +24,8 @@ Open <http://localhost:5173/admin> and sign in with an admin created via `bun ru
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:3000` | Public URL of the API. It is inlined at **build time**, so set it before `bun run build` |
 
+| `BACKEND_URL` | _(unset)_ | Server-only API origin. When set, REST calls go to this app's own `/api/*` and `/health`, and `next.config.ts` rewrites them to the API, so the browser never sees the API URL for REST. socket.io still connects straight to `NEXT_PUBLIC_API_URL` (Vercel can't proxy WebSockets) |
+
 Put it in `.env.local` (git-ignored):
 
 ```bash

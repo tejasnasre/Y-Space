@@ -1,4 +1,8 @@
+/** Direct API origin. Still needed by socket.io: Vercel rewrites cannot proxy WebSockets. */
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
+
+/** With BACKEND_URL set, REST calls go to our own origin and next.config.ts rewrites them to the API. */
+const REST_BASE = process.env.NEXT_PUBLIC_USE_API_PROXY === "1" ? "" : API_URL;
 
 export class ApiError extends Error {
   constructor(
@@ -137,7 +141,7 @@ async function request<T>(path: string, init: RequestInit & { token?: string } =
   const { token, headers, ...rest } = init;
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, {
+    res = await fetch(`${REST_BASE}${path}`, {
       ...rest,
       headers: {
         "ngrok-skip-browser-warning": "1",
@@ -147,7 +151,7 @@ async function request<T>(path: string, init: RequestInit & { token?: string } =
       },
     });
   } catch {
-    throw new ApiError("network_error", 0, `Cannot reach the API at ${API_URL}`);
+    throw new ApiError("network_error", 0, "Cannot reach the API");
   }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new ApiError(data.error ?? "unknown_error", res.status, data.message);
