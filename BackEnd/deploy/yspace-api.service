@@ -1,0 +1,28 @@
+[Unit]
+Description=Y-Space API (Bun + Elysia + socket.io + mediasoup)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=yspace
+Group=yspace
+WorkingDirectory=/opt/yspace
+EnvironmentFile=/etc/yspace.env
+Environment=NODE_ENV=production
+# --smol: smaller JS heap. The VM has ~1 GB of RAM, shared with Caddy and the OS.
+ExecStart=/opt/yspace/.bun/bin/bun --smol index.ts
+Restart=always
+RestartSec=3
+# Hard ceiling so a leak gets this service restarted instead of the whole VM into swap.
+MemoryHigh=500M
+MemoryMax=650M
+LimitNOFILE=65535
+# hardening
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,3 +1,5 @@
+# LOCAL DEV ONLY: Postgres for `bun run dev` / `bun test`. The API is never run in Docker (it is one Bun process;
+# mediasoup is a worker inside it). Production: see deploy/ (systemd + Caddy, no Docker).
 services:
   db:
     # Postgres 17 + pg_cron (a clock) + pgmq (a message queue), on the same Alpine base as postgres:17-alpine (see db/Dockerfile).
@@ -20,31 +22,6 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
-
-  api:
-    build: .
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      PORT: 3000
-      DATABASE_URL: postgres://yspace:${POSTGRES_PASSWORD}@db:5432/yspace
-      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://localhost:5173}
-      CORS_ORIGINS: ${CORS_ORIGINS:-}
-      TRUST_PROXY: ${TRUST_PROXY:-false}
-      MAX_SPEAKERS: ${MAX_SPEAKERS:-5}
-      MAX_PARTICIPANTS: ${MAX_PARTICIPANTS:-100}
-      ADMIN_SESSION_TTL_HOURS: ${ADMIN_SESSION_TTL_HOURS:-72}
-      RECONNECT_GRACE_SECONDS: ${RECONNECT_GRACE_SECONDS:-15}
-      RTC_LISTEN_IP: 0.0.0.0
-      RTC_ANNOUNCED_IP: ${RTC_ANNOUNCED_IP:?set RTC_ANNOUNCED_IP in .env (your public IP, or LAN IP for local testing)}
-      RTC_PORT: ${RTC_PORT:-44444}
-    ports:
-      - "${API_PORT:-3000}:3000"
-      # WebRTC media: same port number inside and out, because it is announced to browsers
-      - "${RTC_PORT:-44444}:${RTC_PORT:-44444}/udp"
-      - "${RTC_PORT:-44444}:${RTC_PORT:-44444}/tcp"
 
 volumes:
   pgdata:

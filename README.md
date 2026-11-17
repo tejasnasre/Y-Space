@@ -41,7 +41,7 @@ Each folder has its own README with the details:
 
 ## Quick start (local development)
 
-You need [Bun](https://bun.sh) (1.4+) and Docker.
+You need [Bun](https://bun.sh) (1.4+). Docker is optional (only for a local Postgres).
 
 ```bash
 # 1. Backend: database + API
@@ -62,16 +62,11 @@ Then open <http://localhost:5173/admin>, sign in with the admin you just created
 
 Migrations run automatically when the API boots.
 
-## Run everything in Docker (API + database)
+## Production
 
-```bash
-cd BackEnd
-cp .env.example .env     # set POSTGRES_PASSWORD, RTC_ANNOUNCED_IP (your public IP), PUBLIC_WEB_URL
-docker compose up -d --build
-docker compose run --rm api bun scripts/create-admin.ts <username> <password>
-```
-
-Open `RTC_PORT` (default `44444`) for **both UDP and TCP** in your firewall. The frontend is deployed separately (see [FrontEnd/README.md](FrontEnd/README.md)).
+No Docker: the API (with the mediasoup worker inside it) runs as a systemd service behind Caddy, and Postgres is external (Neon).
+This keeps it light enough for a 1 GB VM. See [BackEnd/README.md](BackEnd/README.md#production-no-docker) and [BackEnd/deploy/](BackEnd/deploy/).
+Open `RTC_PORT` (default `44444`) for **both UDP and TCP** in the firewall. The frontend is deployed separately (see [FrontEnd/README.md](FrontEnd/README.md)).
 
 ## Going to production
 

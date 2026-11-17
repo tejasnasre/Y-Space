@@ -11,27 +11,31 @@ The web UI lives in [../FrontEnd](../FrontEnd/README.md).
 - Audio only (Opus).
 - Admins only see their own spaces, participants and reports. Someone else's space returns `404 space_not_found`.
 
-## Run with Docker (recommended)
+## Production (no Docker)
+
+The API is a single Bun process; mediasoup is a worker inside it, so there is nothing to containerise. On a small VM it runs
+under systemd with Caddy in front for TLS. Postgres is external (Neon) or any reachable Postgres 14+.
+See [deploy/](deploy/):
 
 ```bash
-cp .env.example .env     # set POSTGRES_PASSWORD, RTC_ANNOUNCED_IP (public IP), PUBLIC_WEB_URL
-docker compose up -d --build
-docker compose run --rm api bun scripts/create-admin.ts <username> <password-min-10-chars>
-docker compose logs -f api
+# on the VM, once
+sudo bash deploy/setup-vm.sh              # Bun, systemd unit, Caddy; stops Docker if present
+sudo nano /etc/yspace.env                  # DATABASE_URL, RTC_ANNOUNCED_IP, PUBLIC_WEB_URL, CORS_ORIGINS, TRUST_PROXY=true
+# from your laptop, every release
+./deploy/deploy.sh                         # rsync + bun install + restart + /health check
 ```
 
-- `db` is Postgres 17 with a named volume (`pgdata`), published on `127.0.0.1:5432` only.
-- `api` applies pending migrations on boot, so there is no separate migrate step.
-- Open `RTC_PORT` (default 44444) for **UDP and TCP** in your firewall. That is the only media port.
-- Linux servers can also use `network_mode: host` for the api service to skip Docker's NAT for UDP.
-- Back up with `docker compose exec db pg_dump -U yspace yspace > backup.sql`.
+- The API applies pending migrations on boot, so there is no separate migrate step.
+- Open `RTC_PORT` (default 44444) for **UDP and TCP** in the OS firewall **and** the cloud provider's network rules. Also 80/443 for Caddy.
+- Logs: `journalctl -u yspace-api -f`. Memory is capped by the unit (`MemoryHigh=500M`, `MemoryMax=650M`).
+- Create an admin on the VM: `sudo -u yspace bash -c 'set -a; . /etc/yspace.env; cd /opt/yspace && .bun/bin/bun scripts/create-admin.ts <username> <password>'`.
 
-## Run locally (without the api container)
+## Run locally
 
 ```bash
 bun install                # mediasoup builds/downloads its worker on first install (a few minutes)
 cp .env.example .env
-docker compose up -d db    # just Postgres
+docker compose up -d db    # just Postgres (or point DATABASE_URL at any Postgres, e.g. Neon)
 bun run admin:create <username> <password>    # --reset to change a password
 bun run dev                # or: bun run start
 bun test                   # needs the db container; each test file uses its own throw-away database
@@ -70,7 +74,7 @@ Copy [.env.example](.env.example) to `.env` (Bun loads it automatically). Only `
 | `RTC_PORT` | `44444` | The only media port. Open it for UDP **and** TCP |
 
 `GET /health` returns `{ ok, live, scheduler, queue }`: the live space id (or `null`), whether the scheduler runs on `pg_cron`
-or `in-process`, and whether the raise-hand queue is `pgmq` or `memory`. The Docker image uses it for its healthcheck.
+or `in-process`, and whether the raise-hand queue is `pgmq` or `memory`. Use it for uptime checks.
 
 ## Database (Drizzle)
 
@@ -188,7 +192,8 @@ src/db/                schema + Bun.sql connection + migrations
 drizzle/               generated SQL migrations
 db/Dockerfile          Postgres 17 + pg_cron + pgmq
 tests/                 bun test suites (each file gets its own throw-away database)
-Dockerfile, docker-compose.yml
+docker-compose.yml     local-dev Postgres only
+deploy/                systemd unit, Caddyfile, setup + deploy scripts (no Docker)
 scripts/create-admin.ts
 ```
 

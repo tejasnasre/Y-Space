@@ -1,0 +1,8 @@
+# TLS for the API (browsers only allow the microphone on HTTPS).
+# <ip-with-dashes>.sslip.io resolves to the VM, so HTTPS works with no domain of your own.
+# Got a real domain? Point an A record at the VM and replace the site name below.
+130-210-11-134.sslip.io {
+	encode zstd gzip
+	# websocket upgrade for /socket.io/ is handled automatically by reverse_proxy
+	reverse_proxy 127.0.0.1:3000
+}

@@ -40,3 +40,8 @@ yarn-error.log*
 # coverage
 coverage
 *.lcov
+
+# ssh keys (never commit)
+ssh-key-*.key
+ssh-key-*.key.pub
+*.pem

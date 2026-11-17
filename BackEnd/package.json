@@ -11,8 +11,8 @@
     "test": "bun test",
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "docker:up": "docker compose up -d --build",
-    "docker:logs": "docker compose logs -f api"
+    "db:up": "docker compose up -d db",
+    "deploy": "./deploy/deploy.sh"
   },
   "trustedDependencies": [
     "mediasoup"
