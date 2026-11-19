@@ -16,7 +16,7 @@ services:
       - pgdata:/var/lib/postgresql/data
     # loopback only: for local dev, tests and psql. Never exposed to the network.
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U yspace -d yspace"]
       interval: 3s

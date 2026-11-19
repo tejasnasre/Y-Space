@@ -1,3 +1,12 @@
+## Package manager: bun
+
+This project uses **bun** (`bun.lock`, `packageManager: bun@…`). Never use npm, npx, pnpm, or yarn.
+
+- Install: `bun install`, `bun add <pkg>`, `bun add -d <pkg>`, `bun remove <pkg>`
+- Scripts: `bun run dev`, `bun run build`, `bun run lint`, `bun run test:e2e`
+- One-off binaries: `bunx <bin>` (e.g. `bunx e2e run tests/x.e2e.ts`, `bunx tsc --noEmit`)
+- When docs or skills show `npx …` / `npm install …`, translate them to the bun equivalent.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 ## This is NOT the Next.js you know

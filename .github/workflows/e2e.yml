@@ -1,0 +1,65 @@
+# Written by `e2e init --ci github-actions`: the e2e tests on every pull request
+# and every push to main, one job per platform. See https://e2e.com/docs/ci/github-actions
+name: e2e
+
+# Disabled: no automatic runs on pull requests or pushes. Run it by hand from the Actions tab.
+# To turn it back on, restore:
+#   pull_request:
+#   push:
+#     branches: [main]
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: FrontEnd
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: FrontEnd/package.json
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('FrontEnd/bun.lock') }}
+
+      - name: Install browsers
+        run: bunx e2e-web install chromium --with-deps
+
+      - name: Run e2e
+        run: bunx e2e run --reporter list,junit
+        env:
+          # Add these under Settings > Secrets and variables > Actions. They mirror FrontEnd/.env.local.
+          E2E_ADMIN_USERNAME: ${{ secrets.E2E_ADMIN_USERNAME }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+      - name: Upload the report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-web
+          path: |
+            FrontEnd/.e2e/report.json
+            FrontEnd/.e2e/junit.xml
+            FrontEnd/.e2e/results
+          # .e2e is a hidden directory, which upload-artifact skips when it expands a folder.
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7

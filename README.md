@@ -17,7 +17,7 @@ A host opens a room, shares a link and a secret, and guests join **without creat
 | Folder | What it is | Stack |
 | --- | --- | --- |
 | [BackEnd/](BackEnd/) | REST API, socket.io signaling, mediasoup SFU, scheduler | Bun, Elysia, socket.io, mediasoup, Postgres (Drizzle ORM), pg_cron, pgmq |
-| [FrontEnd/](FrontEnd/) | Admin dashboard, guest join flow, live room UI | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui (Base UI), mediasoup-client |
+| [FrontEnd/](FrontEnd/) | Admin dashboard, guest join flow, live room UI | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui (Base UI), mediasoup-client; [e2e](https://e2e.com) for end-to-end tests |
 | `db-backups/` | Local Postgres dumps (git-ignored, may contain real data) | |
 
 Each folder has its own README with the details:
@@ -85,6 +85,16 @@ cd BackEnd
 bun test            # needs the db container; each test file uses its own throw-away database
 bun run typecheck
 ```
+
+Frontend end-to-end tests use [e2e](https://e2e.com) (Playwright-based, with optional AI agent steps). They need the API and the frontend running, plus an admin account in `FrontEnd/.env.local`:
+
+```bash
+cd FrontEnd
+bunx e2e-web install chromium    # first time only
+bun run test:e2e
+```
+
+See [FrontEnd/README.md](FrontEnd/README.md#end-to-end-tests) for setup and the list of covered flows. A manual GitHub Actions workflow ([.github/workflows/e2e.yml](.github/workflows/e2e.yml)) can run them too.
 
 ## Known limits (by design)
 

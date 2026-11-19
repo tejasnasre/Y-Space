@@ -43,6 +43,7 @@ The API's `CORS_ORIGINS` must allow this app's origin.
 | `bun run build` | Production build |
 | `bun run start` | Serve the production build on port 5173 |
 | `bun run lint` | ESLint |
+| `bun run test:e2e` | End-to-end tests with [e2e](https://e2e.com) (see [End-to-end tests](#end-to-end-tests)) |
 
 `next.config.ts` allows dev access from a LAN address and `*.ngrok-free.app`, which is handy for testing the microphone from a phone. Browsers only allow mic access on HTTPS or `localhost`, so use a tunnel or TLS for devices other than your own machine. Adjust `allowedDevOrigins` for your own network.
 
@@ -81,6 +82,31 @@ public/                 static assets
 ## How the live room works
 
 `hooks/use-space-room.ts` opens a socket.io connection with `auth: { spaceId, token }` (the admin session token for the host, the join token for guests), loads the mediasoup device, creates a receive transport for everyone and a send transport for speakers, and re-establishes media after a reconnect. The full event and signaling reference is in [../BackEnd/README.md](../BackEnd/README.md#socketio).
+
+## End-to-end tests
+
+The UI is covered by browser end-to-end tests built on [e2e](https://e2e.com) (`e2e`, `@e2e-dev/web`, Playwright under the hood). Config is in [e2e.config.ts](e2e.config.ts) and the tests live in [tests/](tests/) as `*.e2e.ts` files.
+
+They cover: admin sign-in, starting/ending a space, scheduling, history, moderation, the guest join flow and the home page. `agentic.e2e.ts` has AI-driven steps that run on your local Claude Code (sign in with `claude`, or set `ANTHROPIC_API_KEY`).
+
+**Prerequisites:** the API and the frontend must be running (`bun run dev` in both), and an admin account must exist (`bun run admin:create` in the backend). The backend allows one live space at a time, so the tests run one file after another (`workers: 1`) and clean up leftover test spaces. Don't run them against a space you care about.
+
+Put the admin credentials in `.env.local` (git-ignored):
+
+```bash
+E2E_ADMIN_USERNAME=your-admin
+E2E_ADMIN_PASSWORD=your-password
+# optional: test a deployed app instead of http://localhost:5173
+# APP_URL=https://your-app.example.com
+```
+
+```bash
+bunx e2e-web install chromium    # first time only: download the test browser
+bun run test:e2e                 # run everything
+bunx e2e run tests/home.e2e.ts   # run one file
+```
+
+Reports and traces are written to `.e2e/` (git-ignored). A manual-only GitHub Actions workflow, [.github/workflows/e2e.yml](../.github/workflows/e2e.yml), runs the suite from the Actions tab. It needs the `E2E_ADMIN_USERNAME`, `E2E_ADMIN_PASSWORD` and `NEXT_PUBLIC_API_URL` repository secrets.
 
 ## Adding UI components
 
